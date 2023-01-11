@@ -1,0 +1,16 @@
+{
+  "name": "node_js",
+  "version": "1.0.0",
+  "description": "belajar nodejs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "author": "nopep",
+  "license": "ISC",
+  "dependencies": {
+    "dayjs": "^1.11.7",
+    "express": "^4.18.2"
+  }
+}

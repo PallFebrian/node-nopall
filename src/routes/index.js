@@ -1,98 +1,95 @@
 const express = require('express');
-const authMiddleWare = require('./middleware/authMiddleWare');
+const {
+  getListProduk,
+  createProduk,
+} = require('../controllers/produkController');
 const router = express.Router();
-const uploadMulti = require('../storage/fileUploadMulti')
-const uploadSingle = require('../storage/fileUploadSingle')
+const {
+  getListUser,
+  createUser,
+  getDetailUserById,
+  getDetailUserByParams,
+  updateUser,
+  deleteUser,
+} = require('../controllers/userController');
+const validationResultMiddleware = require('../routes/middleware/validationResault');
+const userValidator = require('../validators/userValidator');
+const produkValidator = require('../validators/produkValitor');
+const { register, login, loginAuth, updatePassword, lupaPassword, resetPassword } = require('../controllers/authController');
+const jwtValidateMiddleware = require('../routes/middleware/jwtValidateMiddleware');
+const {
+  createArtikel,
+  getListArtikel,
+  deleteArtikel,
+  updateArtikel,
+  createArtikelBulk,
+  createArtikelMulti,
+  deleteArtikelMulti,
+  deleteMulti,
+} = require('../controllers/artikelController');
+const paginationMW = require('./middleware/paginationMW');
 
-router.post('/upload/single',uploadSingle, (req, res) => {
 
-  res.send({
-    status: 'Success',
-    msg: 'Upload Success',
-    file: req.file,
-    fileUrl : `${req.protocol}://${req.get('host')} /${req.file.filename}`
-  });
-});
+//login
 
-router.post('/upload/multi',uploadMulti, (req, res) => {
-
-  res.send({
-    status: 'Success',
-    msg: 'Upload Success',
-    file: req.files,
-    // fileUrl : `${req.protocol}://${req.get('host')} /${req.file.filename}`
-  });
-});
+router.post('/register', register);
+router.post('/login', login);
+router.post('/lupaPassword', lupaPassword);
+router.post('/resetPassword/:userId/:token', resetPassword);
+router.put('/user/updatePassword',
+userValidator.updatePassword,
+validationResultMiddleware,
+updatePassword)
 
 
-router.post('/user/create', (req, res) => {
-  const payload = req.body;
-  const { kelas, nama } = req.body;
+//implementasi jwtvalidate
+router.use(jwtValidateMiddleware);
 
-  res.json({
-    status: 'Success',
-    msg: 'Latihan request body',
-    payload: payload,
-    nama: nama,
-  });
-});
+//user
 
-router.get('/', authMiddleWare, (req, res) => {
-  res.send('Hello World');
-});
+router.get('/user/list', getListUser);
+router.post(
+  '/user/create',
+  userValidator.createUserValidator,
+  validationResultMiddleware,
+  createUser
+);
 
-router.post('/', authMiddleWare, (req, res) => {
-  res.send({
-    status: 'success',
-    message: 'ini request dengan method POST',
-  });
-});
+router.put(
+  '/user/update/:id',
+  userValidator.updateUserValidator,
+  validationResultMiddleware,
+  updateUser
+);
 
-router.use(authMiddleWare);
+router.delete('/user/delete/:id', deleteUser);
 
-router.get('/user', (req, res) => {
-  res.send({
-    status: 'success',
-    message: 'nopep',
-  });
-});
+router.get('/user/detail/:id', getDetailUserById);
+router.get('/user/list/:email', getDetailUserByParams);
 
-//latihan routing params
+//artikel
 
-router.get('/siswa/:nama/:sekolah', (req, res) => {
-  // let nama = req.params.nama;
-  // let sekolah = req.params.sekolah;
-  let { nama, sekolah } = req.params;
-  res.send({
-    status: 'success',
-    message: `nama siswa adalah ${nama}, dan sekolah di ${sekolah}`,
-    // message : `siswa atas nama ${req.params.nama} ditemukan`
-  });
-});
+router.post('/artikel/create', createArtikel);
+router.post('/artikel/create/bulk', createArtikelBulk);
+router.delete('/artikel/delete-multi', deleteMulti);
+router.post('/artikel/create/multi', createArtikelMulti);
+router.get('/artikel/list', getListArtikel);
+router.delete('/artikel/delete/:id', deleteArtikel);
+router.put('/artikel/update/:id',updateArtikel);
 
-//latihan query string
+//update passwor
 
-router.get('/siswa/:nama', (req, res) => {
-  let { nama } = req.params;
-  let { kelas = 'x', sekolah = 'mq' } = req.query;
-  res.send({
-    status: 'success',
-    message: `nama siswa adalah ${nama} kelas ${kelas} di sekolah ${sekolah}`,
-  });
-});
 
-router.get('/absensi/:nama', (req, res) => {
-  let { nama } = req.params;
-  let { status, dari_tanggal, sampai_tanggal } = req.query;
-  res.send({
-    status: 'success',
-    data: {
-      nama: nama,
-      status: status,
-      dari_tanggal: dari_tanggal,
-      sampai_tanggal: sampai_tanggal,
-    },
-  });
-});
+//produk
+
+// router.get('/produk/list', getListProduk);
+// router.post(
+//   '/produk/create',
+//   produkValidator.createProdukValidator,
+//   validationResultMiddleware,
+//   createProduk
+// );
+// router.get('/produk/detail/:id', getDetailProdukById);
+// router.get('/produk/list/:nama', getDetailProdukByParams);
 
 module.exports = router;

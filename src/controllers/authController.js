@@ -271,10 +271,67 @@ async function resetPassword(req, res) {
     });
   }
 }
+
+const index = async (req, res) => {
+  try {
+    let { keyword, page, pageSize, orderBy, sortBy, pageActive } = req.query;
+
+    const users = await UserModel.findAndContAll({
+      attributes: ['id', ['name', 'nama'], 'email', 'status', 'jenisKelamin'],
+      where: {
+        ...(keyword !== undefined && {
+          [Op.or]: [
+            {
+              name: {
+                [Op.like]: `%${keyword}%`,
+              },
+            },
+            {
+              email: {
+                [Op.like]: `%${keyword}%`,
+              },
+            },
+            {
+              jenisKelamin: {
+                [Op.like]: `%${keyword}%`,
+              },
+            },
+          ],
+        }),
+      },
+      order: [[sortBy, orderBy]],
+      offset: page,
+      limit: pageSize,
+    });
+    console.log('page', page);
+    console.log('pageSize', pageSize);
+    return res.json({
+      status: 'success',
+      msg: 'daftar user ditemukan',
+      data: users,
+      pagination: {
+        page: pageActive,
+        nextPage: page + 1,
+        previousPage: pageActive + 1,
+        jumlah: users.row.length,
+        total: users.count,
+      },
+    });
+  } catch (err) {
+    console.log('err', err);
+    res.status(403).json({
+      status: 'fail',
+      msg: 'ada kesalahan',
+      err: err,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   updatePassword,
   lupaPassword,
   resetPassword,
+  index
 };

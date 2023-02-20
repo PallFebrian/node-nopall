@@ -1,5 +1,6 @@
 const ArtikelModel = require('../models').artikel;
 const { Op } = require('sequelize');
+const { checkQuery } = require('../utils');
 
 async function createArtikel(req, res) {
   try {
@@ -34,38 +35,47 @@ async function getListArtikel(req, res) {
     pageSize,
     year,
     offset,
-    sortBy = "id",
-    orderBy = "desc",
+    sortBy = 'id',
+    orderBy = 'desc',
+    isAll,
   } = req.query;
   try {
     const artikel = await ArtikelModel.findAndCountAll({
       attributes: {
-        exclude: ["createAt", "updateAt"],
+        exclude: ['createAt', 'updateAt'],
       },
-      // where: {
-      //   [Op.or]: [
-      //     {
-      //       title: {
-      //         [Op.substring] : keyword,
-      //       },
-      //     },
-      //     {
-      //       description: {
-      //         [Op.substring] : keyword,
-      //       },
-      //     },
-      //   ],
-      //   year: {
-      //     [Op.gte] : year,
-      //   },
-      // },
-      // order: [[sortBy, orderBy]],
+      where: {
+        ...(checkQuery(isAll) &&
+          isAll != '1' && {
+            userId: req.id,
+          }),
+        ...(checkQuery(keyword) && {
+          [Op.or]: [
+            {
+              title: {
+                [Op.substring]: keyword,
+              },
+            },
+            {
+              description: {
+                [Op.substring]: keyword,
+              },
+            },
+          ],
+        }),
+        ...(checkQuery(year) && {
+          year: {
+            [Op.gte]: year,
+          },
+        }),
+      },
+      order: [[sortBy, orderBy]],
       limit: pageSize,
       offset: offset, // offset bukanlah page
     });
     res.json({
-      status: "Success",
-      message: "Data Artikel Ditemukan",
+      status: 'Success',
+      message: 'Data Artikel Ditemukan',
       pageNation: {
         currentPage: page,
         pageSize: pageSize,
@@ -82,71 +92,70 @@ async function getListArtikel(req, res) {
       },
     });
   } catch (err) {
-    console.log("ada kesalahan masbro =>", err);
+    console.log('ada kesalahan masbro =>', err);
     res.status(403).json({
-      status: "Fail",
-      maessage: "Terjadi Kesalahan",
+      status: 'Fail',
+      maessage: 'Terjadi Kesalahan',
     });
   }
 }
 
-  // async function getListArtikel(req, res) {
-  //   try {
-  //     const {title,dari_tahun,sampai_tahun} = req.query
-  //     const artikel = await ArtikelModel.findAll({
-  //       attributes: [
-  //         'id',
-  //         'userId',
-  //         ['title', 'judul'], //alias
-  //         'year',
-  //         ['description', 'deskripsi'],  //alias
-  //       ], //cuma ini yang di tampilkan
-  //       where: {
-  //         title : {
-  //           [Op.substring] : title
-  //         },
-  //         year : {
-  //           [Op.between] : [dari_tahun,sampai_tahun]
-  //         }
-  //       },
-  //     });
+// async function getListArtikel(req, res) {
+//   try {
+//     const {title,dari_tahun,sampai_tahun} = req.query
+//     const artikel = await ArtikelModel.findAll({
+//       attributes: [
+//         'id',
+//         'userId',
+//         ['title', 'judul'], //alias
+//         'year',
+//         ['description', 'deskripsi'],  //alias
+//       ], //cuma ini yang di tampilkan
+//       where: {
+//         title : {
+//           [Op.substring] : title
+//         },
+//         year : {
+//           [Op.between] : [dari_tahun,sampai_tahun]
+//         }
+//       },
+//     });
 
-  //     res.json({
-  //       status: 'success',
-  //       msg: 'Artikel di temukan',
-  //       data: artikel,
-  //       query:{
-  //         title
-  //       }
-  //     });
-  //   } catch (err) {
-  //     res.status(403).json({
-  //       status: 'finally',
-  //       msg: 'Terjadi Kesalahan',
-  //     });
-  //   }
+//     res.json({
+//       status: 'success',
+//       msg: 'Artikel di temukan',
+//       data: artikel,
+//       query:{
+//         title
+//       }
+//     });
+//   } catch (err) {
+//     res.status(403).json({
+//       status: 'finally',
+//       msg: 'Terjadi Kesalahan',
+//     });
+//   }
 
-  // async function getListArtikel(req, res) {
-  //   try {
-  //     const { id } = req.params;
+// async function getListArtikel(req, res) {
+//   try {
+//     const { id } = req.params;
 
-  //     const artikel = await ArtikelModel.findAll({
-  //       where: {
-  //         userId: req.id,
-  //       },
-  //     });
-  //     res.json({
-  //       status: 'success',
-  //       msg: 'Artikel di temukan',
-  //       data: artikel,
-  //     });
-  //   } catch (err) {
-  //     res.status(403).json({
-  //       status: 'finally',
-  //       msg: 'Terjadi Kesalahan',
-  //     });
-  //   }
-
+//     const artikel = await ArtikelModel.findAll({
+//       where: {
+//         userId: req.id,
+//       },
+//     });
+//     res.json({
+//       status: 'success',
+//       msg: 'Artikel di temukan',
+//       data: artikel,
+//     });
+//   } catch (err) {
+//     res.status(403).json({
+//       status: 'finally',
+//       msg: 'Terjadi Kesalahan',
+//     });
+//   }
 
 async function updateArtikel(req, res) {
   try {
